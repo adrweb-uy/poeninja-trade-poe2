@@ -1,6 +1,5 @@
 /**
  * popup.js — Extension Popup Logic
- * Carga y guarda la configuración usando chrome.storage.sync
  */
 
 const leagueSelect      = document.getElementById('league');
@@ -8,34 +7,23 @@ const listingTypeSelect = document.getElementById('listingType');
 const modeNameInput     = document.getElementById('mode-name');
 const modeTypeInput     = document.getElementById('mode-type');
 const autoOpenInput     = document.getElementById('autoOpen');
+const autoFiltersInput  = document.getElementById('autoFilters');
 const statusMsg         = document.getElementById('status-msg');
 const githubLink        = document.getElementById('github-link');
 
-// Actualizar link de GitHub con la URL real del repo
-githubLink.href = 'https://github.com/Drian/poeninja-trade-poe2';
-
-// ─── Cargar configuración guardada ──────────────────────────────────────────
+githubLink.href = 'https://github.com/adrweb-uy/poeninja-trade-poe2';
 
 chrome.storage.sync.get(
-  {
-    league:      'Fate of the Vaal',
-    listingType: 'securable',
-    searchMode:  'name',
-    autoOpen:    true,
-  },
+  { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'name', autoOpen: true, autoFilters: true },
   (config) => {
     leagueSelect.value      = config.league;
     listingTypeSelect.value = config.listingType;
-    if (config.searchMode === 'name+type') {
-      modeTypeInput.checked = true;
-    } else {
-      modeNameInput.checked = true;
-    }
-    autoOpenInput.checked = config.autoOpen;
+    modeTypeInput.checked   = config.searchMode === 'name+type';
+    modeNameInput.checked   = config.searchMode !== 'name+type';
+    autoOpenInput.checked   = config.autoOpen;
+    autoFiltersInput.checked= config.autoFilters;
   }
 );
-
-// ─── Guardar configuración al cambiar ───────────────────────────────────────
 
 function saveConfig() {
   const config = {
@@ -43,27 +31,24 @@ function saveConfig() {
     listingType: listingTypeSelect.value,
     searchMode:  document.querySelector('input[name="searchMode"]:checked')?.value || 'name',
     autoOpen:    autoOpenInput.checked,
+    autoFilters: autoFiltersInput.checked,
   };
-
-  chrome.storage.sync.set(config, () => {
-    showStatus('✓ Guardado', 'success');
-  });
+  chrome.storage.sync.set(config, () => showStatus('✓ Guardado', 'success'));
 }
 
 function showStatus(text, type = 'info') {
   statusMsg.textContent = text;
   statusMsg.className = `status-msg status-msg--${type}`;
   statusMsg.style.opacity = '1';
-
   setTimeout(() => {
     statusMsg.style.opacity = '0';
     setTimeout(() => { statusMsg.textContent = ''; }, 300);
   }, 1500);
 }
 
-// Listeners
 leagueSelect.addEventListener('change', saveConfig);
 listingTypeSelect.addEventListener('change', saveConfig);
 modeNameInput.addEventListener('change', saveConfig);
 modeTypeInput.addEventListener('change', saveConfig);
 autoOpenInput.addEventListener('change', saveConfig);
+autoFiltersInput.addEventListener('change', saveConfig);

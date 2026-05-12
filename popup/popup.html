@@ -8,7 +8,6 @@
 </head>
 <body>
   <div class="popup">
-    <!-- Header -->
     <header class="popup__header">
       <div class="popup__logo">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -21,13 +20,11 @@
         <h1>poe.ninja Trade</h1>
         <span class="popup__subtitle">POE2 Trade Search</span>
       </div>
-      <div class="popup__version">v0.1.0</div>
+      <div class="popup__version">v0.2.0</div>
     </header>
 
-    <!-- Divider -->
     <div class="divider"></div>
 
-    <!-- Settings -->
     <main class="popup__body">
 
       <!-- Liga -->
@@ -110,6 +107,23 @@
         </div>
       </div>
 
+      <!-- Filtros automáticos del item -->
+      <div class="setting-group setting-group--inline">
+        <label class="setting-label" for="autoFilters">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+          Auto-filtros (iLvl, Stats)
+        </label>
+        <label class="toggle" id="auto-filters-toggle">
+          <input type="checkbox" id="autoFilters" />
+          <span class="toggle__track">
+            <span class="toggle__thumb"></span>
+          </span>
+        </label>
+      </div>
+
       <!-- Auto-abrir tab -->
       <div class="setting-group setting-group--inline">
         <label class="setting-label" for="autoOpen">
@@ -130,10 +144,8 @@
 
     </main>
 
-    <!-- Divider -->
     <div class="divider"></div>
 
-    <!-- Footer -->
     <footer class="popup__footer">
       <span id="status-msg" class="status-msg"></span>
       <a href="https://github.com" target="_blank" class="footer-link" id="github-link">

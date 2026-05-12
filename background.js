@@ -3,29 +3,145 @@
  * El background no tiene restricciones CORS gracias a host_permissions.
  */
 
-const POE2_TRADE_API = 'https://www.pathofexile.com/api/trade2/search/poe2';
-const POE2_TRADE_URL = 'https://www.pathofexile.com/trade2/search/poe2';
+const POE2_TRADE_API  = 'https://www.pathofexile.com/api/trade2/search/poe2';
+const POE2_TRADE_URL  = 'https://www.pathofexile.com/trade2/search/poe2';
+const POE2_STATS_API  = 'https://www.pathofexile.com/api/trade2/data/stats';
 
-async function fetchTradeUrl(itemName, itemType, isUnique, league, listingType) {
+// ─── Cache de stats ───────────────────────────────────────────────────────────
+
+/** Map<normalizedText, { id, text, label }> */
+let statsMap  = null;
+let statsFetchedAt = 0;
+const STATS_TTL = 3_600_000; // 1 hora
+
+async function getStatsMap() {
+  const now = Date.now();
+  if (statsMap && (now - statsFetchedAt) < STATS_TTL) return statsMap;
+
+  try {
+    console.log('[poe-trade BG] Descargando stats list...');
+    const resp = await fetch(POE2_STATS_API);
+    if (!resp.ok) throw new Error(`Stats API ${resp.status}`);
+    const data = await resp.json();
+
+    statsMap = new Map();
+    for (const group of (data.result || [])) {
+      for (const entry of (group.entries || [])) {
+        if (!entry.id || !entry.text) continue;
+        const key = normalizeStatText(entry.text);
+        statsMap.set(key, { id: entry.id, text: entry.text, label: group.label });
+      }
+    }
+    statsFetchedAt = now;
+    console.log('[poe-trade BG] Stats cargados:', statsMap.size, 'entradas');
+  } catch (err) {
+    console.error('[poe-trade BG] Error cargando stats:', err.message);
+    statsMap = statsMap || new Map(); // mantener cache anterior si falla
+  }
+
+  return statsMap;
+}
+
+// ─── Normalización ────────────────────────────────────────────────────────────
+
+/**
+ * Reemplaza todos los números (con o sin signo) por "#".
+ * Ejemplo: "+73% increased Critical Hit Chance" → "+#% increased Critical Hit Chance"
+ */
+function normalizeStatText(text) {
+  return text
+    .replace(/(?<![a-zA-Z])[+-]?\d+(?:\.\d+)?/g, '#')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+/** Extrae el primer número de un texto de stat mod */
+function extractValue(text) {
+  const m = text.match(/[+-]?\d+(?:\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+}
+
+// ─── Matching stats ───────────────────────────────────────────────────────────
+
+async function matchStatMods(statMods) {
+  if (!statMods || statMods.length === 0) return [];
+
+  const map = await getStatsMap();
+  const results = [];
+
+  for (const { text, modType } of statMods) {
+    const key = normalizeStatText(text);
+    const stat = map.get(key);
+
+    if (stat) {
+      const rawValue = extractValue(text);
+      const value    = rawValue !== null ? Math.abs(rawValue) : null;
+      console.log('[poe-trade BG] ✅ Match:', text, '→', stat.id, '| value:', value);
+      results.push({ id: stat.id, value, modType });
+    } else {
+      console.log('[poe-trade BG] ✗ Sin match:', text, '| key:', key);
+    }
+  }
+
+  return results;
+}
+
+// ─── Builder del query ────────────────────────────────────────────────────────
+
+async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, statMods) {
   const statusOption = listingType || 'securable';
-  const query = isUnique && itemName
+
+  // Nombre o tipo base según si es único
+  const query = (isUnique && itemName)
     ? { status: { option: statusOption }, name: itemName }
     : { status: { option: statusOption }, type: itemType };
 
+  // ── misc_filters: iLvl y quality ──────────────────────────────────────────
+  const miscFilters = {};
+  if (ilvl    !== null && ilvl    !== undefined) miscFilters.ilvl    = { min: ilvl };
+  if (quality !== null && quality !== undefined) miscFilters.quality = { min: quality };
+
+  if (Object.keys(miscFilters).length > 0) {
+    query.filters = {
+      misc_filters: { filters: miscFilters },
+    };
+  }
+
+  // ── stat_filters: mods del item ───────────────────────────────────────────
+  const matched = await matchStatMods(statMods);
+  if (matched.length > 0) {
+    query.stats = [{
+      type: 'and',
+      filters: matched.map(m => ({
+        id:       m.id,
+        value:    m.value !== null ? { min: m.value } : {},
+        disabled: false,
+      })),
+    }];
+  }
+
+  return query;
+}
+
+// ─── Fetch trade URL ──────────────────────────────────────────────────────────
+
+async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType, ilvl, quality, statMods }) {
+  const query   = await buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, statMods);
   const payload = { query, sort: { price: 'asc' } };
-  const url = `${POE2_TRADE_API}/${encodeURIComponent(league)}`;
+  const url     = `${POE2_TRADE_API}/${encodeURIComponent(league)}`;
 
   console.log('[poe-trade BG] POST →', url);
-  console.log('[poe-trade BG] payload:', JSON.stringify(payload));
+  console.log('[poe-trade BG] payload:', JSON.stringify(payload, null, 2));
 
   const response = await fetch(url, {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body:    JSON.stringify(payload),
   });
 
   const text = await response.text();
-  console.log('[poe-trade BG] status:', response.status, '| body:', text.slice(0, 200));
+  console.log('[poe-trade BG] status:', response.status, '| body:', text.slice(0, 300));
 
   if (!response.ok) throw new Error(`API ${response.status}: ${text}`);
 
@@ -35,12 +151,12 @@ async function fetchTradeUrl(itemName, itemType, isUnique, league, listingType) 
   return `${POE2_TRADE_URL}/${encodeURIComponent(league)}/${data.id}`;
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// ─── Message listener ─────────────────────────────────────────────────────────
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action !== 'searchItem') return false;
 
-  const { itemName, itemType, isUnique, league, listingType } = message;
-
-  fetchTradeUrl(itemName, itemType, isUnique, league, listingType)
+  fetchTradeUrl(message)
     .then((tradeUrl) => {
       console.log('[poe-trade BG] ✅ abriendo:', tradeUrl);
       chrome.tabs.create({ url: tradeUrl, active: true });
@@ -51,5 +167,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ error: err.message });
     });
 
-  return true; // mantener canal async abierto
+  return true; // canal async abierto
 });
+
+// Pre-cargar stats al arrancar para que la primera búsqueda sea rápida
+getStatsMap();

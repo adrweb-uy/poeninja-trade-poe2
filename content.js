@@ -27,29 +27,33 @@ function findActiveTooltip(slotEl) {
 }
 
 /**
- * Detección de único por color del nombre en el tooltip de poe.ninja:
- *   Único → naranja/ámbar: rgb(177, 98, 37)  → R alto, G<160, B<80
- *   Raro  → amarillo:      rgb(255, 255, 117) → R alto, G alto, B bajo (NO único)
- *   Mágico→ azul:          R bajo, B alto
+ * Clasifica el color de un elemento para identificar el tipo de mod:
+ *   orange/amber → único (R alto, G<160, B<80)
+ *   yellow       → explícito raro (R>180, G>180, B<120)
+ *   blue         → implícito/encantamiento (B>150, R<150)
  */
-function isUniqueByColor(el) {
-  if (!el) return false;
+function classifyModColor(el) {
+  if (!el) return 'unknown';
   const color = window.getComputedStyle(el).color;
   const m = color.match(/\d+/g);
-  if (!m) return false;
+  if (!m || m.length < 3) return 'unknown';
   const [r, g, b] = m.map(Number);
-  // Solo naranja/ámbar = único. Amarillo (rare) queda excluido porque G > 160.
-  const isUnique = r > 140 && g < 160 && b < 80;
-  console.log('[poe-trade] color nombre:', color, '→ isUnique:', isUnique);
-  return isUnique;
+  if (r > 140 && g < 160 && b < 80)  return 'unique';   // naranja = único
+  if (r > 180 && g > 180 && b < 120) return 'explicit'; // amarillo = explícito
+  if (b > 150 && r < 150)            return 'implicit'; // azul = implícito
+  return 'white';
 }
+
+function isUniqueByColor(el) {
+  return classifyModColor(el) === 'unique';
+}
+
+// ─── Extracción ───────────────────────────────────────────────────────────────
 
 function extractItemInfoFromSlot(slotEl) {
   const tooltipEl = findActiveTooltip(slotEl);
-  if (!tooltipEl) return { itemName: '', itemType: '', slotArea: '', isUnique: false };
+  if (!tooltipEl) return null;
 
-  // TreeWalker captura TODOS los nodos de texto (incluyendo no-hojas)
-  // Esto encuentra "Dueling Wand" que el filtro de hojas perdía
   const walker = document.createTreeWalker(tooltipEl, NodeFilter.SHOW_TEXT);
   const entries = [];
   while (walker.nextNode()) {
@@ -61,17 +65,44 @@ function extractItemInfoFromSlot(slotEl) {
   }
 
   const texts = entries.map(e => e.text);
-  console.log('[poe-trade] textos (TreeWalker):', texts.slice(0, 12));
+  console.log('[poe-trade] textos tooltip:', texts.slice(0, 20));
 
   const itemName = texts[0] || '';
-  const itemType = texts[1] || '';  // Ahora debería ser "Dueling Wand"
+  const itemType = texts[1] || '';
   const isUnique = isUniqueByColor(entries[0]?.el || null);
 
   const gridArea = (slotEl.getAttribute('style') || '').match(/grid-area:\s*([^;]+)/);
   const slotArea = gridArea ? gridArea[1].trim() : 'Unknown';
 
-  console.log('[poe-trade] extracción:', { itemName, itemType, slotArea, isUnique });
-  return { itemName, itemType, slotArea, isUnique };
+  // ─ Extraer iLvl, Quality y stat mods ─────────────────────────────────────
+  let ilvl    = null;
+  let quality = null;
+  const statMods = [];
+
+  for (const { text, el } of entries) {
+    // Item Level: 81
+    const ilvlM = text.match(/^Item Level:\s*(\d+)$/i);
+    if (ilvlM) { ilvl = parseInt(ilvlM[1]); continue; }
+
+    // Quality: +30%
+    const qualM = text.match(/^Quality:\s*\+?(\d+)%$/i);
+    if (qualM) { quality = parseInt(qualM[1]); continue; }
+
+    // Ignorar líneas de requerimientos / secciones
+    if (/^Requires:/i.test(text)) continue;
+    if (/^(Weapon|Armour|Flask|Jewel|Equipment|Item|Rarity)$/i.test(text)) continue;
+
+    // Stat mods: líneas con color clasificado y que contengan números
+    const modType = classifyModColor(el);
+    const isStatLine = (modType === 'explicit' || modType === 'implicit' ||
+                        (isUnique && modType === 'unique'));
+    if (isStatLine && /\d/.test(text)) {
+      statMods.push({ text, modType });
+    }
+  }
+
+  console.log('[poe-trade] extracción:', { itemName, itemType, isUnique, ilvl, quality, statMods });
+  return { itemName, itemType, slotArea, isUnique, ilvl, quality, statMods };
 }
 
 // ─── Config ──────────────────────────────────────────────────────────────────
@@ -79,7 +110,7 @@ function extractItemInfoFromSlot(slotEl) {
 async function getConfig() {
   return new Promise(resolve =>
     chrome.storage.sync.get(
-      { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'name', autoOpen: true },
+      { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'name', autoOpen: true, autoFilters: true },
       resolve
     )
   );
@@ -109,9 +140,8 @@ function createSearchButton(slotEl) {
 
     const info = extractItemInfoFromSlot(slotEl);
     const config = await getConfig();
-    console.log('[poe-trade] enviando:', { info, league: config.league });
 
-    if (!info.itemName && !info.itemType) {
+    if (!info || (!info.itemName && !info.itemType)) {
       setButtonState(btn, 'error', 'No se pudo leer el ítem. Hacé hover primero.');
       setTimeout(() => setButtonState(btn, null, 'Buscar en POE2 Trade'), 2500);
       return;
@@ -120,7 +150,17 @@ function createSearchButton(slotEl) {
     setButtonState(btn, 'loading', 'Buscando...');
 
     chrome.runtime.sendMessage(
-      { action: 'searchItem', itemName: info.itemName, itemType: info.itemType, isUnique: info.isUnique, league: config.league, listingType: config.listingType },
+      {
+        action: 'searchItem',
+        itemName:    info.itemName,
+        itemType:    info.itemType,
+        isUnique:    info.isUnique,
+        ilvl:        info.ilvl,
+        quality:     info.quality,
+        statMods:    config.autoFilters ? info.statMods : [],
+        league:      config.league,
+        listingType: config.listingType,
+      },
       (response) => {
         if (chrome.runtime.lastError) {
           console.error('[poe-trade] runtime error:', chrome.runtime.lastError.message);
