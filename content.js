@@ -74,19 +74,22 @@ function extractItemInfoFromSlot(slotEl) {
   const gridArea = (slotEl.getAttribute('style') || '').match(/grid-area:\s*([^;]+)/);
   const slotArea = gridArea ? gridArea[1].trim() : 'Unknown';
 
-  // ─ Extraer iLvl, Quality y stat mods ─────────────────────────────────────
-  let ilvl    = null;
+  // ─ Extraer iLvl, Quality usando el texto completo para evitar nodos separados ──
+  const fullText = tooltipEl.innerText || tooltipEl.textContent || '';
+  
+  let ilvl = null;
+  const ilvlM = fullText.match(/Item Level:\s*(\d+)/i);
+  if (ilvlM) ilvl = parseInt(ilvlM[1]);
+
   let quality = null;
+  const qualM = fullText.match(/Quality:\s*\+?(\d+)%/i);
+  if (qualM) quality = parseInt(qualM[1]);
+
   const statMods = [];
 
   for (const { text, el } of entries) {
-    // Item Level: 81
-    const ilvlM = text.match(/^Item Level:\s*(\d+)$/i);
-    if (ilvlM) { ilvl = parseInt(ilvlM[1]); continue; }
-
-    // Quality: +30%
-    const qualM = text.match(/^Quality:\s*\+?(\d+)%$/i);
-    if (qualM) { quality = parseInt(qualM[1]); continue; }
+    // Ya extrajimos ilvl y quality del texto completo, podemos ignorarlos acá si aparecen
+    if (/^Item Level:/i.test(text) || /^Quality:/i.test(text) || /^\+?\d+%?$/.test(text)) continue;
 
     // Ignorar líneas de requerimientos
     if (/^Requires:/i.test(text)) continue;
