@@ -120,29 +120,46 @@ function extractItemInfoFromSlot(slotEl) {
     if (intM) reqInt = parseInt(intM[1]);
   }
 
-  const statWalker = document.createTreeWalker(tooltipEl, NodeFilter.SHOW_TEXT);
-  const blockMap = new Map();
+  const statWalker = document.createTreeWalker(tooltipEl, NodeFilter.SHOW_ALL);
+  const rawLines = [];
+  let currentLineText = '';
+  let currentLineColorNode = null;
 
   while (statWalker.nextNode()) {
     const node = statWalker.currentNode;
-    const tag = node.parentElement?.tagName.toLowerCase() || '';
-    if (['script', 'style', 'svg', 'path', 'circle', 'line'].includes(tag)) continue;
     
-    const t = node.textContent;
-    if (!t.trim()) continue;
-
-    // Encontrar el contenedor bloque más cercano (div, p, li)
-    const blockEl = node.parentElement.closest('div, p, li') || node.parentElement;
-    
-    if (!blockMap.has(blockEl)) {
-      blockMap.set(blockEl, '');
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = node.tagName.toLowerCase();
+      if (['script', 'style', 'svg', 'path', 'circle', 'line'].includes(tag)) continue;
+      
+      // Elementos que cortan la línea
+      if (['br', 'div', 'p', 'li'].includes(tag)) {
+        if (currentLineText.trim()) {
+          rawLines.push({ text: currentLineText, el: currentLineColorNode });
+        }
+        currentLineText = '';
+        currentLineColorNode = null;
+      }
+    } else if (node.nodeType === Node.TEXT_NODE) {
+      const parentTag = node.parentElement?.tagName.toLowerCase() || '';
+      if (['script', 'style', 'svg', 'path', 'circle', 'line'].includes(parentTag)) continue;
+      
+      const t = node.textContent;
+      if (t.trim()) {
+        currentLineText += t;
+        if (!currentLineColorNode) {
+          currentLineColorNode = node.parentElement;
+        }
+      }
     }
-    blockMap.set(blockEl, blockMap.get(blockEl) + t);
+  }
+  if (currentLineText.trim()) {
+    rawLines.push({ text: currentLineText, el: currentLineColorNode });
   }
 
   const statMods = [];
 
-  for (const [el, rawText] of blockMap.entries()) {
+  for (const { text: rawText, el } of rawLines) {
     const text = rawText.trim().replace(/\s+/g, ' ');
     if (!text || !/\d/.test(text)) continue;
 
