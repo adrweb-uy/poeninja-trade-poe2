@@ -5,7 +5,6 @@
 const leagueSelect      = document.getElementById('league');
 const listingTypeSelect = document.getElementById('listingType');
 const modeNameInput     = document.getElementById('mode-name');
-const modeTypeInput     = document.getElementById('mode-type');
 const modeOnlyTypeInput = document.getElementById('mode-onlytype');
 const autoOpenInput     = document.getElementById('autoOpen');
 const autoFiltersInput  = document.getElementById('autoFilters');
@@ -21,8 +20,6 @@ chrome.storage.sync.get(
     listingTypeSelect.value = config.listingType;
     if (config.searchMode === 'only_type') {
       modeOnlyTypeInput.checked = true;
-    } else if (config.searchMode === 'name+type') {
-      modeTypeInput.checked = true;
     } else {
       modeNameInput.checked = true;
     }
@@ -35,7 +32,7 @@ function saveConfig() {
   const config = {
     league:      leagueSelect.value,
     listingType: listingTypeSelect.value,
-    searchMode:  document.querySelector('input[name="searchMode"]:checked')?.value || 'name',
+    searchMode:  document.querySelector('input[name="searchMode"]:checked')?.value || 'only_type',
     autoOpen:    autoOpenInput.checked,
     autoFilters: autoFiltersInput.checked,
   };
@@ -55,7 +52,6 @@ function showStatus(text, type = 'info') {
 leagueSelect.addEventListener('change', saveConfig);
 listingTypeSelect.addEventListener('change', saveConfig);
 modeNameInput.addEventListener('change', saveConfig);
-modeTypeInput.addEventListener('change', saveConfig);
 if (modeOnlyTypeInput) modeOnlyTypeInput.addEventListener('change', saveConfig);
 autoOpenInput.addEventListener('change', saveConfig);
 autoFiltersInput.addEventListener('change', saveConfig);

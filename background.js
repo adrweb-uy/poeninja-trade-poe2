@@ -171,6 +171,12 @@ async function buildQuery(itemName, itemType, isUnique, listingType, searchMode,
   query.filters = query.filters || {};
   const typeFilters = {};
 
+  // Si el ítem es Único y tenemos el nombre, forzamos la búsqueda por Nombre
+  // para que busque directamente el objeto específico (sobrescribe la opción 'Por tipo')
+  if (isUnique && itemName) {
+    searchMode = 'name';
+  }
+
   if (searchMode === 'only_type') {
     const cat = getCategoryFromType(itemType);
     if (cat) {
@@ -179,16 +185,11 @@ async function buildQuery(itemName, itemType, isUnique, listingType, searchMode,
       query.type = itemType; // fallback if category not found
     }
   } else {
-    // Modo "name" (Solo nombre o Type si no es único) o "name+type"
-    if (searchMode === 'name+type') {
-      if (itemName) query.name = itemName;
-      if (itemType) query.type = itemType;
-    } else { // default 'name'
-      if (isUnique && itemName) {
-        query.name = itemName;
-      } else {
-        query.type = itemType;
-      }
+    // default 'name' (Solo nombre o Type si no es único)
+    if (isUnique && itemName) {
+      query.name = itemName;
+    } else {
+      query.type = itemType;
     }
   }
 
