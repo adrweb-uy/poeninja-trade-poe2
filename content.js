@@ -34,13 +34,31 @@ function findActiveTooltip(slotEl) {
  */
 function classifyModColor(el) {
   if (!el) return 'unknown';
+
+  const cls = (el.className || '').toLowerCase();
+  if (cls.includes('fractured') || cls.includes('poe-fractured')) return 'fractured';
+  if (cls.includes('explicit') || cls.includes('poe-rare')) return 'explicit';
+  if (cls.includes('implicit') || cls.includes('poe-magic')) return 'implicit';
+  if (cls.includes('unique') || cls.includes('poe-unique')) return 'unique';
+  if (cls.includes('crafted') || cls.includes('poe-crafted')) return 'crafted';
+
   const color = window.getComputedStyle(el).color;
   const m = color.match(/\d+/g);
   if (!m || m.length < 3) return 'unknown';
   const [r, g, b] = m.map(Number);
-  if (r > 140 && g < 160 && b < 80)  return 'unique';   // naranja = único
-  if (r > 180 && g > 180 && b < 120) return 'explicit'; // amarillo = explícito
-  if (b > 150 && r < 150)            return 'implicit'; // azul = implícito
+
+  // Naranja/Unico
+  if (r > 140 && g < 130 && b < 80) return 'unique';
+  
+  // Fractured (dorado/marrón: ej rgb(162, 145, 96))
+  if (r > 140 && r < 190 && g > 120 && g < 170 && b < 120) return 'fractured';
+  
+  // Amarillo/Explicito (suele ser r>160, g>160, b más bajo, pero en POE2 a veces es rgb(210, 210, 150))
+  if (r > 150 && g > 150 && b < 180) return 'explicit';
+  
+  // Azul/Implicito (Runas, Skills, Implicits)
+  if (b > 150 && r < 150 && g < 180) return 'implicit';
+  
   return 'white';
 }
 
@@ -102,25 +120,42 @@ function extractItemInfoFromSlot(slotEl) {
     if (intM) reqInt = parseInt(intM[1]);
   }
 
+  const statWalker = document.createTreeWalker(tooltipEl, NodeFilter.SHOW_TEXT);
+  const blockMap = new Map();
+
+  while (statWalker.nextNode()) {
+    const node = statWalker.currentNode;
+    const tag = node.parentElement?.tagName.toLowerCase() || '';
+    if (['script', 'style', 'svg', 'path', 'circle', 'line'].includes(tag)) continue;
+    
+    const t = node.textContent;
+    if (!t.trim()) continue;
+
+    // Encontrar el contenedor bloque más cercano (div, p, li)
+    const blockEl = node.parentElement.closest('div, p, li') || node.parentElement;
+    
+    if (!blockMap.has(blockEl)) {
+      blockMap.set(blockEl, '');
+    }
+    blockMap.set(blockEl, blockMap.get(blockEl) + t);
+  }
+
   const statMods = [];
 
-  for (const { text, el } of entries) {
-    // Ya extrajimos ilvl y quality del texto completo, podemos ignorarlos acá si aparecen
+  for (const [el, rawText] of blockMap.entries()) {
+    const text = rawText.trim().replace(/\s+/g, ' ');
+    if (!text || !/\d/.test(text)) continue;
+
     if (/^Item Level:/i.test(text) || /^Quality:/i.test(text) || /^\+?\d+%?$/.test(text)) continue;
-
-    // Ignorar líneas de requerimientos
     if (/^Requires:/i.test(text)) continue;
-    // Ignorar líneas genéricas que no son stats
     if (/^(Weapon|Armour|Flask|Jewel|Equipment|Item|Rarity|Dueling Wand|Wand|One Handed Mace|Two Handed Mace|Bow|Crossbow|Quarterstaff)$/i.test(text)) continue;
-
-    // Ignorar base stats del ítem (aparecen en blanco arriba de todo)
     if (/^(Physical Damage|Fire Damage|Cold Damage|Lightning Damage|Chaos Damage|Elemental Damage|Critical Hit Chance|Attacks per Second|Armour|Evasion Rating|Energy Shield|Block Chance|Spirit|Reload Time):/i.test(text)) continue;
 
-    // Stat mods: líneas con color clasificado y que contengan números
     const modType = classifyModColor(el);
-    const isStatLine = (modType === 'explicit' || modType === 'implicit' || modType === 'white' ||
+    const isStatLine = (modType === 'explicit' || modType === 'implicit' || modType === 'white' || modType === 'fractured' ||
                         (isUnique && modType === 'unique'));
-    if (isStatLine && /\d/.test(text)) {
+    
+    if (isStatLine) {
       statMods.push({ text, modType });
     }
   }

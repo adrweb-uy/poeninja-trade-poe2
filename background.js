@@ -82,20 +82,22 @@ async function matchStatMods(statMods) {
       
       // Determine preferred prefix based on color/modType
       let preferredPrefix = 'explicit';
-      if (modType === 'implicit') preferredPrefix = 'implicit';
       if (modType === 'white') preferredPrefix = 'rune';
+      if (modType === 'fractured') preferredPrefix = 'fractured';
+      // Nota: En poe.ninja, los explicits suelen ser de color azul (implicit). 
+      // Por defecto preferimos 'explicit' para ellos.
       
       let bestMatch = null;
       
       // Try exact prefix match first
       bestMatch = candidates.find(c => c.prefix === preferredPrefix);
       
-      // If we are implicit, we might actually be looking at an enchant, rune, or skill
+      // Si era azul (implicit) y no existe como explicit, puede ser un skill, enchant o verdaderamente un implicit
       if (!bestMatch && modType === 'implicit') {
-        bestMatch = candidates.find(c => ['rune', 'enchant', 'skill'].includes(c.prefix));
+        bestMatch = candidates.find(c => ['skill', 'enchant', 'rune', 'implicit'].includes(c.prefix));
       }
       
-      // If we are white (rune), maybe it's an enchant or skill
+      // Si era blanco (rune) y no existe como rune, puede ser skill o enchant
       if (!bestMatch && modType === 'white') {
         bestMatch = candidates.find(c => ['skill', 'enchant'].includes(c.prefix));
       }
