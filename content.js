@@ -148,7 +148,8 @@ function extractItemInfoFromSlot(slotEl) {
       if (t.trim()) {
         currentLineText += t;
         if (!currentLineColorNode) {
-          currentLineColorNode = node.parentElement;
+          // Usa el contenedor principal de la línea para el color, no el span del número (que suele ser blanco)
+          currentLineColorNode = node.parentElement.closest('div, p, li') || node.parentElement;
         }
       }
     }
