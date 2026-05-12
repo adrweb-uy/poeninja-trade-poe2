@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>poe.ninja → POE2 Trade</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup">
+    <!-- Header -->
+    <header class="popup__header">
+      <div class="popup__logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </div>
+      <div class="popup__title">
+        <h1>poe.ninja Trade</h1>
+        <span class="popup__subtitle">POE2 Trade Search</span>
+      </div>
+      <div class="popup__version">v0.1.0</div>
+    </header>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- Settings -->
+    <main class="popup__body">
+
+      <!-- Liga -->
+      <div class="setting-group">
+        <label class="setting-label" for="league">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          Liga activa
+        </label>
+        <div class="select-wrapper">
+          <select id="league" class="setting-select">
+            <option value="Standard">Standard</option>
+            <option value="Mercenaries">Mercenaries</option>
+            <option value="Dawn of the Hunt">Dawn of the Hunt</option>
+            <option value="Settlers of Kalguur">Settlers of Kalguur</option>
+          </select>
+          <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Modo de búsqueda -->
+      <div class="setting-group">
+        <label class="setting-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="13" y2="16"/>
+          </svg>
+          Modo de búsqueda
+        </label>
+        <div class="radio-group">
+          <label class="radio-option" id="mode-name-label">
+            <input type="radio" name="searchMode" value="name" id="mode-name" />
+            <span class="radio-custom"></span>
+            <span class="radio-text">
+              Solo nombre
+              <small>Más rápido, menos preciso</small>
+            </span>
+          </label>
+          <label class="radio-option" id="mode-type-label">
+            <input type="radio" name="searchMode" value="name+type" id="mode-type" />
+            <span class="radio-custom"></span>
+            <span class="radio-text">
+              Nombre + tipo base
+              <small>Más filtrado, más preciso</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Auto-abrir tab -->
+      <div class="setting-group setting-group--inline">
+        <label class="setting-label" for="autoOpen">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+          </svg>
+          Abrir tab automáticamente
+        </label>
+        <label class="toggle" id="auto-open-toggle">
+          <input type="checkbox" id="autoOpen" />
+          <span class="toggle__track">
+            <span class="toggle__thumb"></span>
+          </span>
+        </label>
+      </div>
+
+    </main>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- Footer -->
+    <footer class="popup__footer">
+      <span id="status-msg" class="status-msg"></span>
+      <a href="https://github.com" target="_blank" class="footer-link" id="github-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

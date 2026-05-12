@@ -1,0 +1,113 @@
+/* ─── poe.ninja → POE2 Trade Extension — Content Styles ─── */
+
+/* Botón de búsqueda de trade */
+.poe-trade-btn {
+  /* Posicionamiento: esquina superior derecha del slot */
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 9999;
+
+  /* Tamaño */
+  width: 18px;
+  height: 18px;
+  padding: 2px;
+
+  /* Forma */
+  border-radius: 3px;
+  border: 1px solid rgba(180, 140, 60, 0.5);
+
+  /* Color — temática oscura de poe.ninja con dorado POE */
+  background-color: rgba(20, 18, 14, 0.85);
+  color: #b49050;
+
+  /* Texto / cursor */
+  cursor: pointer;
+  font-size: 0;
+  line-height: 0;
+
+  /* Transiciones */
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease,
+    opacity 0.2s ease;
+
+  /* Oculto por defecto — visible al hacer hover sobre el slot */
+  opacity: 0;
+  pointer-events: none;
+
+  /* Eliminar estilos por defecto del botón */
+  outline: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* SVG dentro del botón */
+.poe-trade-btn svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Mostrar al hacer hover sobre el slot padre */
+[data-tooltip-trigger="true"]:hover .poe-trade-btn,
+[data-tooltip-trigger="true"]:focus-within .poe-trade-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Siempre visible si el slot está seleccionado/activo */
+[data-tooltip-trigger="true"]:focus .poe-trade-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Hover sobre el botón mismo */
+.poe-trade-btn:hover {
+  background-color: rgba(180, 140, 60, 0.25);
+  border-color: #b49050;
+  color: #ddb96a;
+  transform: scale(1.1);
+}
+
+/* Estado: cargando */
+.poe-trade-btn--loading {
+  opacity: 1 !important;
+  pointer-events: none;
+  color: #7ab3d4;
+  border-color: #7ab3d4;
+  animation: poe-trade-spin 0.8s linear infinite;
+}
+
+/* Estado: éxito */
+.poe-trade-btn--success {
+  opacity: 1 !important;
+  color: #5cb85c;
+  border-color: #5cb85c;
+  background-color: rgba(92, 184, 92, 0.15);
+}
+
+/* Estado: error */
+.poe-trade-btn--error {
+  opacity: 1 !important;
+  color: #d9534f;
+  border-color: #d9534f;
+  background-color: rgba(217, 83, 79, 0.15);
+  animation: poe-trade-shake 0.4s ease;
+}
+
+/* Animación de rotación (cargando) */
+@keyframes poe-trade-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Animación de shake (error) */
+@keyframes poe-trade-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-3px); }
+  60%      { transform: translateX(3px); }
+}
