@@ -226,7 +226,7 @@ async function buildQuery(itemName, itemType, isUnique, listingType, searchMode,
         return {
           id:       m.id,
           value:    m.value !== null ? { min: m.value } : {},
-          disabled: false,
+          disabled: true,
         };
       }),
     }];
