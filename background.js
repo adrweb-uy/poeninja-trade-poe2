@@ -38,22 +38,26 @@ async function getTradeSearchUrl(itemName, itemType, league) {
   const payload = buildSearchPayload(itemName, itemType);
   const url = `${POE2_TRADE_API}/${encodeURIComponent(league)}`;
 
+  console.log('[poe-trade BG] POST →', url);
+  console.log('[poe-trade BG] payload:', JSON.stringify(payload));
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      // User-Agent requerido por la API de GGG
-      'User-Agent': 'Chrome Extension poe.ninja-trade-poe2/0.1.0 (contact: extension)',
     },
     body: JSON.stringify(payload),
   });
 
+  console.log('[poe-trade BG] status:', response.status);
+
   if (!response.ok) {
-    const errorText = await response.text().catch(() => response.status);
+    const errorText = await response.text().catch(() => String(response.status));
     throw new Error(`API error ${response.status}: ${errorText}`);
   }
 
   const data = await response.json();
+  console.log('[poe-trade BG] respuesta:', data);
 
   if (!data.id) {
     throw new Error('La API no devolvió un search ID');
