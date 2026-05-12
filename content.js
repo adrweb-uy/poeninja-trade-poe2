@@ -85,6 +85,20 @@ function extractItemInfoFromSlot(slotEl) {
   const qualM = fullText.match(/Quality:\s*\+?(\d+)%/i);
   if (qualM) quality = parseInt(qualM[1]);
 
+  let reqLvl = null, reqStr = null, reqDex = null, reqInt = null;
+  const reqM = fullText.match(/Requires:\s*([^\n]+)/i);
+  if (reqM) {
+    const reqText = reqM[1];
+    const lvlM = reqText.match(/Level\s*(\d+)/i);
+    if (lvlM) reqLvl = parseInt(lvlM[1]);
+    const strM = reqText.match(/(\d+)\s*Str/i);
+    if (strM) reqStr = parseInt(strM[1]);
+    const dexM = reqText.match(/(\d+)\s*Dex/i);
+    if (dexM) reqDex = parseInt(dexM[1]);
+    const intM = reqText.match(/(\d+)\s*Int/i);
+    if (intM) reqInt = parseInt(intM[1]);
+  }
+
   const statMods = [];
 
   for (const { text, el } of entries) {
@@ -105,8 +119,8 @@ function extractItemInfoFromSlot(slotEl) {
     }
   }
 
-  console.log('[poe-trade] extracción:', { itemName, itemType, isUnique, ilvl, quality, statMods });
-  return { itemName, itemType, slotArea, isUnique, ilvl, quality, statMods };
+  console.log('[poe-trade] extracción:', { itemName, itemType, isUnique, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods });
+  return { itemName, itemType, slotArea, isUnique, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods };
 }
 
 // ─── Config ──────────────────────────────────────────────────────────────────
@@ -161,6 +175,10 @@ function createSearchButton(slotEl) {
         isUnique:    info.isUnique,
         ilvl:        info.ilvl,
         quality:     info.quality,
+        reqLvl:      info.reqLvl,
+        reqStr:      info.reqStr,
+        reqDex:      info.reqDex,
+        reqInt:      info.reqInt,
         statMods:    config.autoFilters ? info.statMods : [],
         league:      config.league,
         listingType: config.listingType,

@@ -89,7 +89,7 @@ async function matchStatMods(statMods) {
 
 // ─── Builder del query ────────────────────────────────────────────────────────
 
-async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, statMods) {
+async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods) {
   const statusOption = listingType || 'securable';
 
   // Nombre o tipo base según si es único
@@ -97,14 +97,30 @@ async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quali
     ? { status: { option: statusOption }, name: itemName }
     : { status: { option: statusOption }, type: itemType };
 
+  query.filters = query.filters || {};
+
   // ── type_filters: iLvl y quality ──────────────────────────────────────────
   const typeFilters = {};
   if (ilvl !== null && ilvl !== undefined) typeFilters.ilvl = { min: ilvl };
   if (quality !== null && quality !== undefined) typeFilters.quality = { min: quality };
 
   if (Object.keys(typeFilters).length > 0) {
-    query.filters = query.filters || {};
     query.filters.type_filters = { filters: typeFilters };
+  }
+
+  // ── req_filters: lvl, str, dex, int ─────────────────────────────────────
+  const reqFilters = {};
+  if (reqLvl !== null && reqLvl !== undefined) reqFilters.lvl = { min: reqLvl };
+  if (reqStr !== null && reqStr !== undefined) reqFilters.str = { min: reqStr };
+  if (reqDex !== null && reqDex !== undefined) reqFilters.dex = { min: reqDex };
+  if (reqInt !== null && reqInt !== undefined) reqFilters.int = { min: reqInt };
+
+  if (Object.keys(reqFilters).length > 0) {
+    query.filters.req_filters = { filters: reqFilters };
+  }
+
+  if (Object.keys(query.filters).length === 0) {
+    delete query.filters;
   }
 
   // ── stat_filters: mods del item ───────────────────────────────────────────
@@ -125,8 +141,8 @@ async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quali
 
 // ─── Fetch trade URL ──────────────────────────────────────────────────────────
 
-async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType, ilvl, quality, statMods }) {
-  const query   = await buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, statMods);
+async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods }) {
+  const query   = await buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods);
   const payload = { query, sort: { price: 'asc' } };
   const url     = `${POE2_TRADE_API}/${encodeURIComponent(league)}`;
 
