@@ -88,9 +88,10 @@ function extractItemInfoFromSlot(slotEl) {
     const qualM = text.match(/^Quality:\s*\+?(\d+)%$/i);
     if (qualM) { quality = parseInt(qualM[1]); continue; }
 
-    // Ignorar líneas de requerimientos / secciones
+    // Ignorar líneas de requerimientos
     if (/^Requires:/i.test(text)) continue;
-    if (/^(Weapon|Armour|Flask|Jewel|Equipment|Item|Rarity)$/i.test(text)) continue;
+    // Ignorar líneas genéricas que no son stats
+    if (/^(Weapon|Armour|Flask|Jewel|Equipment|Item|Rarity|Dueling Wand|Wand|One Handed Mace|Two Handed Mace|Bow|Crossbow|Quarterstaff)$/i.test(text)) continue;
 
     // Stat mods: líneas con color clasificado y que contengan números
     const modType = classifyModColor(el);

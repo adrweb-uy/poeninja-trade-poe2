@@ -97,15 +97,14 @@ async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quali
     ? { status: { option: statusOption }, name: itemName }
     : { status: { option: statusOption }, type: itemType };
 
-  // ── misc_filters: iLvl y quality ──────────────────────────────────────────
-  const miscFilters = {};
-  if (ilvl    !== null && ilvl    !== undefined) miscFilters.ilvl    = { min: ilvl };
-  if (quality !== null && quality !== undefined) miscFilters.quality = { min: quality };
+  // ── type_filters: iLvl y quality ──────────────────────────────────────────
+  const typeFilters = {};
+  if (ilvl !== null && ilvl !== undefined) typeFilters.ilvl = { min: ilvl };
+  if (quality !== null && quality !== undefined) typeFilters.quality = { min: quality };
 
-  if (Object.keys(miscFilters).length > 0) {
-    query.filters = {
-      misc_filters: { filters: miscFilters },
-    };
+  if (Object.keys(typeFilters).length > 0) {
+    query.filters = query.filters || {};
+    query.filters.type_filters = { filters: typeFilters };
   }
 
   // ── stat_filters: mods del item ───────────────────────────────────────────
