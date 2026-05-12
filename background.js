@@ -198,7 +198,7 @@ async function buildQuery(itemName, itemType, isUnique, listingType, searchMode,
   if (quality !== null && quality !== undefined) typeFilters.quality = { min: quality };
 
   if (Object.keys(typeFilters).length > 0) {
-    query.filters.type_filters = { filters: typeFilters };
+    query.filters.type_filters = { filters: typeFilters, disabled: true };
   }
 
   // ── req_filters: lvl, str, dex, int ─────────────────────────────────────
@@ -209,12 +209,12 @@ async function buildQuery(itemName, itemType, isUnique, listingType, searchMode,
   if (reqInt !== null && reqInt !== undefined) reqFilters.int = { min: reqInt };
 
   if (Object.keys(reqFilters).length > 0) {
-    query.filters.req_filters = { filters: reqFilters };
+    query.filters.req_filters = { filters: reqFilters, disabled: true };
   }
 
   // ── equipment_filters: rune_sockets ─────────────────────────────────────
   if (runeSockets && runeSockets > 0) {
-    query.filters.equipment_filters = { filters: { rune_sockets: { min: runeSockets } } };
+    query.filters.equipment_filters = { filters: { rune_sockets: { min: runeSockets } }, disabled: true };
   }
 
   // ── stat_filters: mods del item ───────────────────────────────────────────
