@@ -19,7 +19,7 @@ githubLink.href = 'https://github.com/Drian/poeninja-trade-poe2';
 chrome.storage.sync.get(
   {
     league:      'Fate of the Vaal',
-    listingType: 'instant',
+    listingType: 'securable',
     searchMode:  'name',
     autoOpen:    true,
   },

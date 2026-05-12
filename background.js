@@ -7,7 +7,7 @@ const POE2_TRADE_API = 'https://www.pathofexile.com/api/trade2/search/poe2';
 const POE2_TRADE_URL = 'https://www.pathofexile.com/trade2/search/poe2';
 
 async function fetchTradeUrl(itemName, itemType, isUnique, league, listingType) {
-  const statusOption = listingType || 'instant';
+  const statusOption = listingType || 'securable';
   const query = isUnique && itemName
     ? { status: { option: statusOption }, name: itemName }
     : { status: { option: statusOption }, type: itemType };

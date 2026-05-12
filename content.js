@@ -79,7 +79,7 @@ function extractItemInfoFromSlot(slotEl) {
 async function getConfig() {
   return new Promise(resolve =>
     chrome.storage.sync.get(
-      { league: 'Fate of the Vaal', listingType: 'instant', searchMode: 'name', autoOpen: true },
+      { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'name', autoOpen: true },
       resolve
     )
   );
