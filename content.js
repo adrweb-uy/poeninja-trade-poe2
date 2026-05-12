@@ -77,6 +77,9 @@ function extractItemInfoFromSlot(slotEl) {
   // ─ Extraer iLvl, Quality usando el texto completo para evitar nodos separados ──
   const fullText = tooltipEl.innerText || tooltipEl.textContent || '';
   
+  // ─ Extraer Sockets del slotEl ──
+  const runeSockets = slotEl.querySelectorAll('div[style*="socketSlot-"]').length;
+
   let ilvl = null;
   const ilvlM = fullText.match(/Item Level:\s*(\d+)/i);
   if (ilvlM) ilvl = parseInt(ilvlM[1]);
@@ -110,17 +113,20 @@ function extractItemInfoFromSlot(slotEl) {
     // Ignorar líneas genéricas que no son stats
     if (/^(Weapon|Armour|Flask|Jewel|Equipment|Item|Rarity|Dueling Wand|Wand|One Handed Mace|Two Handed Mace|Bow|Crossbow|Quarterstaff)$/i.test(text)) continue;
 
+    // Ignorar base stats del ítem (aparecen en blanco arriba de todo)
+    if (/^(Physical Damage|Fire Damage|Cold Damage|Lightning Damage|Chaos Damage|Elemental Damage|Critical Hit Chance|Attacks per Second|Armour|Evasion Rating|Energy Shield|Block Chance|Spirit|Reload Time):/i.test(text)) continue;
+
     // Stat mods: líneas con color clasificado y que contengan números
     const modType = classifyModColor(el);
-    const isStatLine = (modType === 'explicit' || modType === 'implicit' ||
+    const isStatLine = (modType === 'explicit' || modType === 'implicit' || modType === 'white' ||
                         (isUnique && modType === 'unique'));
     if (isStatLine && /\d/.test(text)) {
       statMods.push({ text, modType });
     }
   }
 
-  console.log('[poe-trade] extracción:', { itemName, itemType, isUnique, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods });
-  return { itemName, itemType, slotArea, isUnique, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods };
+  console.log('[poe-trade] extracción:', { itemName, itemType, isUnique, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods });
+  return { itemName, itemType, slotArea, isUnique, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods };
 }
 
 // ─── Config ──────────────────────────────────────────────────────────────────
@@ -179,6 +185,7 @@ function createSearchButton(slotEl) {
         reqStr:      info.reqStr,
         reqDex:      info.reqDex,
         reqInt:      info.reqInt,
+        runeSockets: info.runeSockets,
         statMods:    config.autoFilters ? info.statMods : [],
         league:      config.league,
         listingType: config.listingType,

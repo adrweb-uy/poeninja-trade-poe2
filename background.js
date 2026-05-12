@@ -9,7 +9,6 @@ const POE2_STATS_API  = 'https://www.pathofexile.com/api/trade2/data/stats';
 
 // ─── Cache de stats ───────────────────────────────────────────────────────────
 
-/** Map<normalizedText, { id, text, label }> */
 let statsMap  = null;
 let statsFetchedAt = 0;
 const STATS_TTL = 3_600_000; // 1 hora
@@ -29,11 +28,14 @@ async function getStatsMap() {
       for (const entry of (group.entries || [])) {
         if (!entry.id || !entry.text) continue;
         const key = normalizeStatText(entry.text);
-        statsMap.set(key, { id: entry.id, text: entry.text, label: group.label });
+        const prefix = entry.id.split('.')[0];
+        
+        if (!statsMap.has(key)) statsMap.set(key, []);
+        statsMap.get(key).push({ id: entry.id, prefix: prefix, label: group.label });
       }
     }
     statsFetchedAt = now;
-    console.log('[poe-trade BG] Stats cargados:', statsMap.size, 'entradas');
+    console.log('[poe-trade BG] Stats cargados:', statsMap.size, 'entradas únicas');
   } catch (err) {
     console.error('[poe-trade BG] Error cargando stats:', err.message);
     statsMap = statsMap || new Map(); // mantener cache anterior si falla
@@ -72,13 +74,39 @@ async function matchStatMods(statMods) {
 
   for (const { text, modType } of statMods) {
     const key = normalizeStatText(text);
-    const stat = map.get(key);
+    const candidates = map.get(key);
 
-    if (stat) {
+    if (candidates && candidates.length > 0) {
       const rawValue = extractValue(text);
       const value    = rawValue !== null ? Math.abs(rawValue) : null;
-      console.log('[poe-trade BG] ✅ Match:', text, '→', stat.id, '| value:', value);
-      results.push({ id: stat.id, value, modType });
+      
+      // Determine preferred prefix based on color/modType
+      let preferredPrefix = 'explicit';
+      if (modType === 'implicit') preferredPrefix = 'implicit';
+      if (modType === 'white') preferredPrefix = 'rune';
+      
+      let bestMatch = null;
+      
+      // Try exact prefix match first
+      bestMatch = candidates.find(c => c.prefix === preferredPrefix);
+      
+      // If we are implicit, we might actually be looking at an enchant, rune, or skill
+      if (!bestMatch && modType === 'implicit') {
+        bestMatch = candidates.find(c => ['rune', 'enchant', 'skill'].includes(c.prefix));
+      }
+      
+      // If we are white (rune), maybe it's an enchant or skill
+      if (!bestMatch && modType === 'white') {
+        bestMatch = candidates.find(c => ['skill', 'enchant'].includes(c.prefix));
+      }
+      
+      // Fallbacks
+      if (!bestMatch) bestMatch = candidates.find(c => c.prefix === 'explicit'); // fallback to explicit
+      if (!bestMatch) bestMatch = candidates.find(c => c.prefix !== 'fractured' && c.prefix !== 'desecrated'); 
+      if (!bestMatch) bestMatch = candidates[0]; // ultimate fallback
+
+      console.log('[poe-trade BG] ✅ Match:', text, '→', bestMatch.id, '| value:', value);
+      results.push({ id: bestMatch.id, value, modType });
     } else {
       console.log('[poe-trade BG] ✗ Sin match:', text, '| key:', key);
     }
@@ -89,7 +117,7 @@ async function matchStatMods(statMods) {
 
 // ─── Builder del query ────────────────────────────────────────────────────────
 
-async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods) {
+async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods) {
   const statusOption = listingType || 'securable';
 
   // Nombre o tipo base según si es único
@@ -119,21 +147,29 @@ async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quali
     query.filters.req_filters = { filters: reqFilters };
   }
 
-  if (Object.keys(query.filters).length === 0) {
-    delete query.filters;
+  // ── equipment_filters: rune_sockets ─────────────────────────────────────
+  if (runeSockets && runeSockets > 0) {
+    query.filters.equipment_filters = { filters: { rune_sockets: { min: runeSockets } } };
   }
 
   // ── stat_filters: mods del item ───────────────────────────────────────────
   const matched = await matchStatMods(statMods);
+  
   if (matched.length > 0) {
     query.stats = [{
       type: 'and',
-      filters: matched.map(m => ({
-        id:       m.id,
-        value:    m.value !== null ? { min: m.value } : {},
-        disabled: false,
-      })),
+      filters: matched.map(m => {
+        return {
+          id:       m.id,
+          value:    m.value !== null ? { min: m.value } : {},
+          disabled: false,
+        };
+      }),
     }];
+  }
+
+  if (Object.keys(query.filters).length === 0) {
+    delete query.filters;
   }
 
   return query;
@@ -141,9 +177,9 @@ async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quali
 
 // ─── Fetch trade URL ──────────────────────────────────────────────────────────
 
-async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods }) {
-  const query   = await buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, statMods);
-  const payload = { query, sort: { price: 'asc' } };
+async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods }) {
+  const query   = await buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods);
+  const payload = { query, sort: { price: "asc" } };
   const url     = `${POE2_TRADE_API}/${encodeURIComponent(league)}`;
 
   console.log('[poe-trade BG] POST →', url);
