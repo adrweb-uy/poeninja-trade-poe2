@@ -119,18 +119,80 @@ async function matchStatMods(statMods) {
 
 // ─── Builder del query ────────────────────────────────────────────────────────
 
-async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods) {
-  const statusOption = listingType || 'securable';
+const categoryMap = {
+  wand: 'weapon.wand',
+  sceptre: 'weapon.sceptre',
+  staff: 'weapon.staff',
+  bow: 'weapon.bow',
+  crossbow: 'weapon.crossbow',
+  dagger: 'weapon.dagger',
+  sword: 'weapon.sword',
+  axe: 'weapon.axe',
+  mace: 'weapon.mace',
+  flail: 'weapon.flail',
+  spear: 'weapon.spear',
+  focus: 'armour.focus',
+  shield: 'armour.shield',
+  quiver: 'armour.quiver',
+  amulet: 'accessory.amulet',
+  ring: 'accessory.ring',
+  belt: 'accessory.belt',
+  helmet: 'armour.helmet',
+  hood: 'armour.helmet',
+  circlet: 'armour.helmet',
+  mask: 'armour.helmet',
+  crown: 'armour.helmet',
+  boots: 'armour.boots',
+  shoes: 'armour.boots',
+  greaves: 'armour.boots',
+  gloves: 'armour.gloves',
+  gauntlets: 'armour.gloves',
+  mitts: 'armour.gloves',
+  armour: 'armour.chest',
+  garb: 'armour.chest',
+  robe: 'armour.chest',
+  vest: 'armour.chest',
+  regalia: 'armour.chest',
+  plate: 'armour.chest',
+  chest: 'armour.chest'
+};
 
-  // Nombre o tipo base según si es único
-  const query = (isUnique && itemName)
-    ? { status: { option: statusOption }, name: itemName }
-    : { status: { option: statusOption }, type: itemType };
+function getCategoryFromType(itemType) {
+  if (!itemType) return null;
+  const words = itemType.toLowerCase().split(/\s+/);
+  const lastWord = words[words.length - 1];
+  return categoryMap[lastWord] || null;
+}
+
+async function buildQuery(itemName, itemType, isUnique, listingType, searchMode, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods) {
+  const statusOption = listingType || 'securable';
+  const query = { status: { option: statusOption } };
 
   query.filters = query.filters || {};
+  const typeFilters = {};
+
+  if (searchMode === 'only_type') {
+    const cat = getCategoryFromType(itemType);
+    if (cat) {
+      typeFilters.category = { option: cat };
+    } else {
+      query.type = itemType; // fallback if category not found
+    }
+  } else {
+    // Modo "name" (Solo nombre o Type si no es único) o "name+type"
+    if (searchMode === 'name+type') {
+      if (itemName) query.name = itemName;
+      if (itemType) query.type = itemType;
+    } else { // default 'name'
+      if (isUnique && itemName) {
+        query.name = itemName;
+      } else {
+        query.type = itemType;
+      }
+    }
+  }
 
   // ── type_filters: iLvl y quality ──────────────────────────────────────────
-  const typeFilters = {};
   if (ilvl !== null && ilvl !== undefined) typeFilters.ilvl = { min: ilvl };
   if (quality !== null && quality !== undefined) typeFilters.quality = { min: quality };
 
@@ -179,8 +241,8 @@ async function buildQuery(itemName, itemType, isUnique, listingType, ilvl, quali
 
 // ─── Fetch trade URL ──────────────────────────────────────────────────────────
 
-async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods }) {
-  const query   = await buildQuery(itemName, itemType, isUnique, listingType, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods);
+async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType, searchMode, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods }) {
+  const query   = await buildQuery(itemName, itemType, isUnique, listingType, searchMode, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods);
   const payload = { query, sort: { price: "asc" } };
   const url     = `${POE2_TRADE_API}/${encodeURIComponent(league)}`;
 

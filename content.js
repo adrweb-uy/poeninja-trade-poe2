@@ -224,6 +224,7 @@ function createSearchButton(slotEl) {
         statMods:    config.autoFilters ? info.statMods : [],
         league:      config.league,
         listingType: config.listingType,
+        searchMode:  config.searchMode,
       },
       (response) => {
         if (chrome.runtime.lastError) {

@@ -6,6 +6,7 @@ const leagueSelect      = document.getElementById('league');
 const listingTypeSelect = document.getElementById('listingType');
 const modeNameInput     = document.getElementById('mode-name');
 const modeTypeInput     = document.getElementById('mode-type');
+const modeOnlyTypeInput = document.getElementById('mode-onlytype');
 const autoOpenInput     = document.getElementById('autoOpen');
 const autoFiltersInput  = document.getElementById('autoFilters');
 const statusMsg         = document.getElementById('status-msg');
@@ -14,12 +15,17 @@ const githubLink        = document.getElementById('github-link');
 githubLink.href = 'https://github.com/adrweb-uy/poeninja-trade-poe2';
 
 chrome.storage.sync.get(
-  { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'name', autoOpen: true, autoFilters: true },
+  { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'only_type', autoOpen: true, autoFilters: true },
   (config) => {
     leagueSelect.value      = config.league;
     listingTypeSelect.value = config.listingType;
-    modeTypeInput.checked   = config.searchMode === 'name+type';
-    modeNameInput.checked   = config.searchMode !== 'name+type';
+    if (config.searchMode === 'only_type') {
+      modeOnlyTypeInput.checked = true;
+    } else if (config.searchMode === 'name+type') {
+      modeTypeInput.checked = true;
+    } else {
+      modeNameInput.checked = true;
+    }
     autoOpenInput.checked   = config.autoOpen;
     autoFiltersInput.checked= config.autoFilters;
   }
@@ -50,5 +56,6 @@ leagueSelect.addEventListener('change', saveConfig);
 listingTypeSelect.addEventListener('change', saveConfig);
 modeNameInput.addEventListener('change', saveConfig);
 modeTypeInput.addEventListener('change', saveConfig);
+if (modeOnlyTypeInput) modeOnlyTypeInput.addEventListener('change', saveConfig);
 autoOpenInput.addEventListener('change', saveConfig);
 autoFiltersInput.addEventListener('change', saveConfig);
