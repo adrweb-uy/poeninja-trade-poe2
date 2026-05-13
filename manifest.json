@@ -2,15 +2,13 @@
   "manifest_version": 3,
   "name": "poe.ninja → POE2 Trade",
   "short_name": "Ninja Trade",
-  "version": "0.1.0",
+  "version": "0.1.260513.821",
   "description": "Agrega un botón de búsqueda en los ítems de poe.ninja para buscarlos directamente en el trade de Path of Exile 2.",
-
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {
@@ -20,25 +18,27 @@
     },
     "default_title": "poe.ninja → POE2 Trade"
   },
-
   "background": {
     "service_worker": "background.js"
   },
-
   "content_scripts": [
     {
-      "matches": ["https://poe.ninja/*"],
-      "js": ["content.js"],
-      "css": ["content.css"],
+      "matches": [
+        "https://poe.ninja/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
-
   "permissions": [
     "storage",
     "tabs"
   ],
-
   "host_permissions": [
     "https://poe.ninja/*",
     "https://www.pathofexile.com/*"

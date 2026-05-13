@@ -11,9 +11,11 @@ const autoFiltersInput  = document.getElementById('autoFilters');
 const statusMsg         = document.getElementById('status-msg');
 const versionDisplay    = document.getElementById('version-display');
 
-// Mostrar versión desde el manifest
+// Mostrar versión dinámica (desde version.js) o manifest
 if (versionDisplay) {
-  versionDisplay.textContent = `v${chrome.runtime.getManifest().version}`;
+  versionDisplay.textContent = (typeof APP_VERSION !== 'undefined') 
+    ? APP_VERSION 
+    : `v${chrome.runtime.getManifest().version}`;
 }
 
 chrome.storage.sync.get(
