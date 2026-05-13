@@ -271,19 +271,24 @@ function createSearchButton(slotEl) {
 
 // ─── Inyección ───────────────────────────────────────────────────────────────
 
-const SLOT_GRID_AREAS = /grid-area:\s*(Weapon|Helm|BodyArmour|Gloves|Boots|Amulet|Ring|Ring2|Ring3|Belt|Offhand|Flask\d*|Flasks|Charms|LifeFlask|ManaFlask)/i;
+// Grid-areas que el elemento puede tener directamente (equipamiento normal)
+const DIRECT_SLOT_AREAS = /grid-area:\s*(Weapon|Helm|BodyArmour|Gloves|Boots|Amulet|Ring|Ring2|Ring3|Belt|Offhand)/i;
+
+// Grid-areas que solo aparecen en el CONTENEDOR PADRE (frascos y charms individuales)
+const CONTAINER_SLOT_AREAS = /grid-area:\s*(Flask\d*|Flasks|LifeFlask|ManaFlask|Charms)/i;
 
 function isEquipmentSlot(el) {
   if (el.nodeType !== Node.ELEMENT_NODE) return false;
   if (el.getAttribute('data-tooltip-trigger') !== 'true') return false;
 
-  // Primero verifica el propio elemento
-  if (SLOT_GRID_AREAS.test(el.getAttribute('style') || '')) return true;
+  // Verifica el propio elemento (equipamiento normal: Boots, Helm, etc.)
+  if (DIRECT_SLOT_AREAS.test(el.getAttribute('style') || '')) return true;
 
-  // Para Flasks y Charms: el grid-area está en el padre/abuelo, no en el hijo con tooltip
+  // Para Frascos y Charms: buscar SOLO grid-areas de contenedor en ancestros
+  // (NO buscar equipamiento normal para no capturar gemas/sockets dentro de items)
   let ancestor = el.parentElement;
   for (let i = 0; i < 3 && ancestor; i++) {
-    if (SLOT_GRID_AREAS.test(ancestor.getAttribute('style') || '')) return true;
+    if (CONTAINER_SLOT_AREAS.test(ancestor.getAttribute('style') || '')) return true;
     ancestor = ancestor.parentElement;
   }
 
