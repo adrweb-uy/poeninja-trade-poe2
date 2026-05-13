@@ -9,7 +9,8 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
-const root = path.join(__dirname, '..');
+// Git ejecuta el hook con cwd = raíz del repositorio, así que process.cwd() es siempre correcto.
+const root = process.cwd();
 
 try {
   // 1. Generar la nueva versión

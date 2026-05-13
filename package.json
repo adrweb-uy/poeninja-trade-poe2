@@ -1,7 +1,7 @@
 {
   "name": "poeninja-trade-poe2",
   "version": "0.1.0",
-  "packageManager": "pnpm",
+  "packageManager": "pnpm@10.30.2",
   "appVersionBase": "0.1",
   "description": "Chrome Extension for poe.ninja and POE2 Trade",
   "main": "background.js",
