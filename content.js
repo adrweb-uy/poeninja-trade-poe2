@@ -274,7 +274,7 @@ function createSearchButton(slotEl) {
 function isEquipmentSlot(el) {
   if (el.nodeType !== Node.ELEMENT_NODE) return false;
   if (el.getAttribute('data-tooltip-trigger') !== 'true') return false;
-  return /grid-area:\s*(Weapon|Helmet|BodyArmour|Gloves|Boots|Amulet|Ring|Ring2|Belt|Offhand|Flask\d*)/i
+  return /grid-area:\s*(Weapon|Helm|BodyArmour|Gloves|Boots|Amulet|Ring|Ring2|Ring3|Belt|Offhand|Flask\d*|Flasks|Charms|LifeFlask|ManaFlask)/i
     .test(el.getAttribute('style') || '');
 }
 
