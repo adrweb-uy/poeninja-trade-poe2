@@ -161,10 +161,6 @@ poeninja-trade-poe2/
 - [x] Soporte para joyas
 - [x] Multi-idioma en el Trade
 - [x] Sistema de versionado automático compatible con Chrome Store
-- [ ] Soporte para páginas adicionales de poe.ninja (Currency, Gems, etc.)
-- [ ] Historial de búsquedas recientes
-- [ ] Atajos de teclado configurables
-
 ---
 
 ## 👤 Autor
