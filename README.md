@@ -95,7 +95,7 @@ Hacé clic en el ícono de la extensión en la barra de Chrome para abrir el pop
 
 2. Generar los archivos de versión:
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 3. Abrir Chrome y navegar a `chrome://extensions`

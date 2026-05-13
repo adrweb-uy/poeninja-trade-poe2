@@ -33,7 +33,7 @@ El script sincroniza automáticamente tres elementos:
 Para actualizar la versión del proyecto antes de probarlo o empaquetarlo para la Store, ejecuta:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Este comando garantiza que la extensión sea válida para la Web Store y que la UI refleje el momento exacto del último cambio.

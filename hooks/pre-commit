@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+/**
+ * hooks/pre-commit
+ * 
+ * Git pre-commit hook: genera la versión automáticamente antes de cada commit.
+ * Se ejecuta vía scripts/setup-hooks.js → .git/hooks/pre-commit
+ */
+
+const { execSync } = require('child_process');
+const path = require('path');
+
+const root = path.join(__dirname, '..');
+
+try {
+  // 1. Generar la nueva versión
+  console.log('[poe-trade] 🔄 Generando versión...');
+  execSync('node scripts/gen-version.js', { cwd: root, stdio: 'inherit' });
+
+  // 2. Añadir los archivos de versión al staging area del commit actual
+  execSync('git add manifest.json popup/version.js', { cwd: root, stdio: 'inherit' });
+
+  console.log('[poe-trade] ✅ Versión actualizada e incluida en el commit.');
+} catch (err) {
+  console.error('[poe-trade] ❌ Error en pre-commit hook:', err.message);
+  process.exit(1); // Abortar el commit si hay un error
+}

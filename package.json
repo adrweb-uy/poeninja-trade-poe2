@@ -1,12 +1,14 @@
 {
   "name": "poeninja-trade-poe2",
   "version": "0.1.0",
+  "packageManager": "pnpm",
   "appVersionBase": "0.1",
   "description": "Chrome Extension for poe.ninja and POE2 Trade",
   "main": "background.js",
   "scripts": {
     "version:gen": "node scripts/gen-version.js",
-    "dev": "npm run version:gen"
+    "dev": "pnpm version:gen",
+    "setup": "node scripts/setup-hooks.js"
   },
   "author": "Adrian Raineri",
   "license": "MIT"
