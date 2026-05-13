@@ -271,11 +271,23 @@ function createSearchButton(slotEl) {
 
 // ─── Inyección ───────────────────────────────────────────────────────────────
 
+const SLOT_GRID_AREAS = /grid-area:\s*(Weapon|Helm|BodyArmour|Gloves|Boots|Amulet|Ring|Ring2|Ring3|Belt|Offhand|Flask\d*|Flasks|Charms|LifeFlask|ManaFlask)/i;
+
 function isEquipmentSlot(el) {
   if (el.nodeType !== Node.ELEMENT_NODE) return false;
   if (el.getAttribute('data-tooltip-trigger') !== 'true') return false;
-  return /grid-area:\s*(Weapon|Helm|BodyArmour|Gloves|Boots|Amulet|Ring|Ring2|Ring3|Belt|Offhand|Flask\d*|Flasks|Charms|LifeFlask|ManaFlask)/i
-    .test(el.getAttribute('style') || '');
+
+  // Primero verifica el propio elemento
+  if (SLOT_GRID_AREAS.test(el.getAttribute('style') || '')) return true;
+
+  // Para Flasks y Charms: el grid-area está en el padre/abuelo, no en el hijo con tooltip
+  let ancestor = el.parentElement;
+  for (let i = 0; i < 3 && ancestor; i++) {
+    if (SLOT_GRID_AREAS.test(ancestor.getAttribute('style') || '')) return true;
+    ancestor = ancestor.parentElement;
+  }
+
+  return false;
 }
 
 function injectButtonIntoSlot(slotEl) {
