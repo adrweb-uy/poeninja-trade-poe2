@@ -2,14 +2,15 @@
  * popup.js — Extension Popup Logic
  */
 
-const leagueSelect      = document.getElementById('league');
-const listingTypeSelect = document.getElementById('listingType');
-const modeNameInput     = document.getElementById('mode-name');
-const modeOnlyTypeInput = document.getElementById('mode-onlytype');
-const autoOpenInput     = document.getElementById('autoOpen');
-const autoFiltersInput  = document.getElementById('autoFilters');
-const statusMsg         = document.getElementById('status-msg');
-const versionDisplay    = document.getElementById('version-display');
+const leagueSelect         = document.getElementById('league');
+const listingTypeSelect    = document.getElementById('listingType');
+const tradeLanguageSelect  = document.getElementById('tradeLanguage');
+const modeNameInput        = document.getElementById('mode-name');
+const modeOnlyTypeInput    = document.getElementById('mode-onlytype');
+const autoOpenInput        = document.getElementById('autoOpen');
+const autoFiltersInput     = document.getElementById('autoFilters');
+const statusMsg            = document.getElementById('status-msg');
+const versionDisplay       = document.getElementById('version-display');
 
 // Mostrar versión dinámica (desde version.js) o manifest
 if (versionDisplay) {
@@ -19,27 +20,29 @@ if (versionDisplay) {
 }
 
 chrome.storage.sync.get(
-  { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'only_type', autoOpen: true, autoFilters: true },
+  { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'only_type', autoOpen: true, autoFilters: true, tradeLanguage: 'en' },
   (config) => {
-    leagueSelect.value      = config.league;
-    listingTypeSelect.value = config.listingType;
+    leagueSelect.value         = config.league;
+    listingTypeSelect.value    = config.listingType;
+    tradeLanguageSelect.value  = config.tradeLanguage;
     if (config.searchMode === 'only_type') {
       modeOnlyTypeInput.checked = true;
     } else {
       modeNameInput.checked = true;
     }
-    autoOpenInput.checked   = config.autoOpen;
-    autoFiltersInput.checked= config.autoFilters;
+    autoOpenInput.checked    = config.autoOpen;
+    autoFiltersInput.checked = config.autoFilters;
   }
 );
 
 function saveConfig() {
   const config = {
-    league:      leagueSelect.value,
-    listingType: listingTypeSelect.value,
-    searchMode:  document.querySelector('input[name="searchMode"]:checked')?.value || 'only_type',
-    autoOpen:    autoOpenInput.checked,
-    autoFilters: autoFiltersInput.checked,
+    league:        leagueSelect.value,
+    listingType:   listingTypeSelect.value,
+    tradeLanguage: tradeLanguageSelect.value,
+    searchMode:    document.querySelector('input[name="searchMode"]:checked')?.value || 'only_type',
+    autoOpen:      autoOpenInput.checked,
+    autoFilters:   autoFiltersInput.checked,
   };
   chrome.storage.sync.set(config, () => showStatus('✓ Guardado', 'success'));
 }
@@ -56,6 +59,7 @@ function showStatus(text, type = 'info') {
 
 leagueSelect.addEventListener('change', saveConfig);
 listingTypeSelect.addEventListener('change', saveConfig);
+tradeLanguageSelect.addEventListener('change', saveConfig);
 modeNameInput.addEventListener('change', saveConfig);
 if (modeOnlyTypeInput) modeOnlyTypeInput.addEventListener('change', saveConfig);
 autoOpenInput.addEventListener('change', saveConfig);

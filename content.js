@@ -189,7 +189,7 @@ function extractItemInfoFromSlot(slotEl) {
 async function getConfig() {
   return new Promise(resolve =>
     chrome.storage.sync.get(
-      { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'name', autoOpen: true, autoFilters: true },
+      { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'name', autoOpen: true, autoFilters: true, tradeLanguage: 'en' },
       resolve
     )
   );
@@ -231,20 +231,21 @@ function createSearchButton(slotEl) {
     chrome.runtime.sendMessage(
       {
         action: 'searchItem',
-        itemName:    info.itemName,
-        itemType:    info.itemType,
-        isUnique:    info.isUnique,
-        ilvl:        info.ilvl,
-        quality:     info.quality,
-        reqLvl:      info.reqLvl,
-        reqStr:      info.reqStr,
-        reqDex:      info.reqDex,
-        reqInt:      info.reqInt,
-        runeSockets: info.runeSockets,
-        statMods:    config.autoFilters ? info.statMods : [],
-        league:      config.league,
-        listingType: config.listingType,
-        searchMode:  config.searchMode,
+        itemName:      info.itemName,
+        itemType:      info.itemType,
+        isUnique:      info.isUnique,
+        ilvl:          info.ilvl,
+        quality:       info.quality,
+        reqLvl:        info.reqLvl,
+        reqStr:        info.reqStr,
+        reqDex:        info.reqDex,
+        reqInt:        info.reqInt,
+        runeSockets:   info.runeSockets,
+        statMods:      config.autoFilters ? info.statMods : [],
+        league:        config.league,
+        listingType:   config.listingType,
+        searchMode:    config.searchMode,
+        tradeLanguage: config.tradeLanguage,
       },
       (response) => {
         if (chrome.runtime.lastError) {

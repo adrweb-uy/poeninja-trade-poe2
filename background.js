@@ -4,8 +4,24 @@
  */
 
 const POE2_TRADE_API  = 'https://www.pathofexile.com/api/trade2/search/poe2';
-const POE2_TRADE_URL  = 'https://www.pathofexile.com/trade2/search/poe2';
 const POE2_STATS_API  = 'https://www.pathofexile.com/api/trade2/data/stats';
+
+// Mapa de idioma → prefijo de URL del sitio de trade
+// La API es siempre la misma (en.pathofexile.com no existe para la API);
+// solo el frontend (trade URL) cambia.
+const LANGUAGE_URL_MAP = {
+  en: 'https://www.pathofexile.com/trade2/search/poe2',
+  es: 'https://es.pathofexile.com/trade2/search/poe2',
+  de: 'https://de.pathofexile.com/trade2/search/poe2',
+  fr: 'https://fr.pathofexile.com/trade2/search/poe2',
+  pt: 'https://pt.pathofexile.com/trade2/search/poe2',
+  ru: 'https://ru.pathofexile.com/trade2/search/poe2',
+  ko: 'https://ko.pathofexile.com/trade2/search/poe2',
+};
+
+function getTradeUrl(language) {
+  return LANGUAGE_URL_MAP[language] || LANGUAGE_URL_MAP['en'];
+}
 
 // ─── Cache de stats ───────────────────────────────────────────────────────────
 
@@ -261,15 +277,15 @@ async function buildQuery(itemName, itemType, isUnique, listingType, searchMode,
 
 // ─── Fetch trade URL ──────────────────────────────────────────────────────────
 
-async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType, searchMode, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods }) {
+async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType, searchMode, tradeLanguage, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods }) {
   const query   = await buildQuery(itemName, itemType, isUnique, listingType, searchMode, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods);
   const payload = { query, sort: { price: "asc" } };
-  const url     = `${POE2_TRADE_API}/${encodeURIComponent(league)}`;
+  const apiUrl  = `${POE2_TRADE_API}/${encodeURIComponent(league)}`;
 
-  console.log('[poe-trade BG] POST →', url);
+  console.log('[poe-trade BG] POST →', apiUrl);
   console.log('[poe-trade BG] payload:', JSON.stringify(payload, null, 2));
 
-  const response = await fetch(url, {
+  const response = await fetch(apiUrl, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(payload),
@@ -283,13 +299,19 @@ async function fetchTradeUrl({ itemName, itemType, isUnique, league, listingType
   const data = JSON.parse(text);
   if (!data.id) throw new Error('La API no devolvió search ID');
 
-  return `${POE2_TRADE_URL}/${encodeURIComponent(league)}/${data.id}`;
+  // Construir la URL de destino según el idioma seleccionado
+  const tradeBaseUrl = getTradeUrl(tradeLanguage);
+  console.log('[poe-trade BG] Idioma seleccionado:', tradeLanguage, '→', tradeBaseUrl);
+  return `${tradeBaseUrl}/${encodeURIComponent(league)}/${data.id}`;
 }
 
 // ─── Message listener ─────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action !== 'searchItem') return false;
+
+  // Asegurar que tradeLanguage tenga un valor por defecto si no viene del popup
+  if (!message.tradeLanguage) message.tradeLanguage = 'en';
 
   fetchTradeUrl(message)
     .then((tradeUrl) => {
