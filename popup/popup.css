@@ -95,12 +95,10 @@ html, body {
 }
 
 .popup__version {
-  font-size: 10px;
-  color: var(--text-muted);
+  font-size: 11px;
+  color: var(--text-dim);
   font-family: monospace;
-  padding: 1px 5px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  opacity: 0.8;
 }
 
 /* ── Divider ─────────────────────────────────────────────── */
@@ -309,21 +307,4 @@ html, body {
 .status-msg--error   { color: var(--red); }
 .status-msg--info    { color: var(--blue); }
 
-.footer-link {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: var(--text-dim);
-  text-decoration: none;
-  transition: color 0.15s;
-}
 
-.footer-link:hover {
-  color: var(--gold-light);
-}
-
-.footer-link svg {
-  width: 13px;
-  height: 13px;
-}

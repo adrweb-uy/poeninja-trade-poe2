@@ -9,9 +9,12 @@ const modeOnlyTypeInput = document.getElementById('mode-onlytype');
 const autoOpenInput     = document.getElementById('autoOpen');
 const autoFiltersInput  = document.getElementById('autoFilters');
 const statusMsg         = document.getElementById('status-msg');
-const githubLink        = document.getElementById('github-link');
+const versionDisplay    = document.getElementById('version-display');
 
-githubLink.href = 'https://github.com/adrweb-uy/poeninja-trade-poe2';
+// Mostrar versión desde el manifest
+if (versionDisplay) {
+  versionDisplay.textContent = `v${chrome.runtime.getManifest().version}`;
+}
 
 chrome.storage.sync.get(
   { league: 'Fate of the Vaal', listingType: 'securable', searchMode: 'only_type', autoOpen: true, autoFilters: true },
