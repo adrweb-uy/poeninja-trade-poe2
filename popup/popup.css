@@ -296,6 +296,36 @@ html, body {
   background: var(--bg-panel);
 }
 
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.author-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  font-size: 11px;
+}
+
+.author-logo {
+  color: var(--gold);
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: -0.5px;
+}
+
+.author-name {
+  color: var(--text-dim);
+  transition: color 0.15s;
+}
+
+.author-link:hover .author-name {
+  color: var(--gold-light);
+}
+
 .status-msg {
   font-size: 11px;
   color: var(--green);
