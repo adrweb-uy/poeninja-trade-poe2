@@ -83,7 +83,7 @@ function extractItemInfoFromSlot(slotEl) {
   }
 
   const texts = entries.map(e => e.text);
-  console.log('[poe-trade] textos tooltip:', texts.slice(0, 20));
+  console.log('[poe-trade] textos tooltip:', texts);
 
   const itemName = texts[0] || '';
   const itemType = texts[1] || '';
@@ -146,7 +146,8 @@ function extractItemInfoFromSlot(slotEl) {
       
       const t = node.textContent;
       if (t.trim()) {
-        currentLineText += t;
+        // Agregamos un espacio para evitar que "Spell" y "Skills" se peguen sin espacios intermedios
+        currentLineText += " " + t;
         if (!currentLineColorNode) {
           // Usa el contenedor principal de la línea para el color, no el span del número (que suele ser blanco)
           currentLineColorNode = node.parentElement.closest('div, p, li') || node.parentElement;
@@ -178,7 +179,8 @@ function extractItemInfoFromSlot(slotEl) {
     }
   }
 
-  console.log('[poe-trade] extracción:', { itemName, itemType, isUnique, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods });
+  console.log('[poe-trade] statMods extraidos:', JSON.stringify(statMods));
+  console.log('[poe-trade] extracción final:', { itemName, itemType, isUnique, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets });
   return { itemName, itemType, slotArea, isUnique, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods };
 }
 
