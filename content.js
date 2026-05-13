@@ -275,51 +275,25 @@ function isEquipmentSlot(el) {
   if (el.nodeType !== Node.ELEMENT_NODE) return false;
   if (el.getAttribute('data-tooltip-trigger') !== 'true') return false;
   
-  // Exclusión por tamaño: Los sockets son muy pequeños (<32px)
-  if (el.offsetWidth > 0 && el.offsetWidth < 32) return false;
-  if (el.offsetHeight > 0 && el.offsetHeight < 32) return false;
-
   const style = el.getAttribute('style') || '';
   
   // 1. Es del grid principal? (Flexibilizamos a Helm, Body, Glove, Boot)
-  let isGridItem = /grid-area:\s*(Weapon|Helm|Body|Glove|Boot|Amulet|Ring|Belt|Offhand|Flask)/i.test(style);
+  if (/grid-area:\s*(Weapon|Helm|Body|Glove|Boot|Amulet|Ring|Belt|Offhand|Flask)/i.test(style)) {
+    return true;
+  }
 
-  // 2. Es de la lista lateral o algún contenedor?
-  let isListItem = false;
+  // 2. Es de la lista lateral o algún otro contenedor?
+  // Verificamos si contiene la imagen típica de un ítem (excluyendo skills/pasivas).
   const img = el.querySelector('img');
-  
   if (img) {
     const src = img.getAttribute('src') || '';
-    let decoded = src.toLowerCase();
-    
-    // Si usa /gen/, decodificamos el base64 de la URL
-    if (src.includes('/gen/')) {
-       const match = src.match(/image\/([A-Za-z0-9_-]+)/);
-       if (match) {
-         try {
-           let b64 = match[1].replace(/_/g, '/').replace(/-/g, '+');
-           while (b64.length % 4) b64 += '=';
-           decoded = atob(b64).toLowerCase();
-         } catch(e) {}
-       }
-    }
-    
-    // Si la imagen decodificada revela que es un socket (runa, gema, pasiva), lo ignoramos inmediatamente.
-    if (decoded.includes('currency') || 
-        decoded.includes('/runes/') || 
-        decoded.includes('gems') || 
-        decoded.includes('skillicons') || 
-        decoded.includes('passives')) {
-      return false; 
-    }
-    
-    // Si es un ítem 2D legítimo
-    if (decoded.includes('2ditems')) {
-      isListItem = true;
+    // Los ítems en POE usan '/gen/' (con sockets) o '/2DItems/' en su URL de imagen.
+    if (src.includes('/gen/') || src.includes('2DItems')) {
+      return true;
     }
   }
   
-  return isGridItem || isListItem;
+  return false;
 }
 
 function injectButtonIntoSlot(slotEl) {
