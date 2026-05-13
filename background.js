@@ -154,7 +154,11 @@ const categoryMap = {
   vest: 'armour.chest',
   regalia: 'armour.chest',
   plate: 'armour.chest',
-  chest: 'armour.chest'
+  chest: 'armour.chest',
+  jewel: 'jewel',
+  flask: 'flask',
+  charm: 'charm',
+  relic: 'relic'
 };
 
 function getCategoryFromType(itemType) {
@@ -165,15 +169,20 @@ function getCategoryFromType(itemType) {
 }
 
 async function buildQuery(itemName, itemType, isUnique, listingType, searchMode, ilvl, quality, reqLvl, reqStr, reqDex, reqInt, runeSockets, statMods) {
-  const statusOption = listingType || 'securable';
+  const validStatusOptions = ['securable', 'available', 'onlineleague', 'online', 'any'];
+  const statusOption = validStatusOptions.includes(listingType) ? listingType : 'securable';
   const query = { status: { option: statusOption } };
 
   query.filters = query.filters || {};
   const typeFilters = {};
 
-  // Si el ítem es Único y tenemos el nombre, forzamos la búsqueda por Nombre
-  // para que busque directamente el objeto específico (sobrescribe la opción 'Por tipo')
-  if (isUnique && itemName) {
+  // Si el ítem no es Único, forzamos siempre la búsqueda por categoría ('only_type')
+  // porque buscar por tipo exacto (ej. 'Dueling Wand') a veces da error 'Unknown item name'.
+  if (!isUnique) {
+    searchMode = 'only_type';
+  } else if (isUnique && itemName) {
+    // Si el ítem es Único y tenemos el nombre, forzamos la búsqueda por Nombre
+    // para que busque directamente el objeto específico.
     searchMode = 'name';
   }
 
