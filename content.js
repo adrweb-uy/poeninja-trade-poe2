@@ -274,26 +274,8 @@ function createSearchButton(slotEl) {
 function isEquipmentSlot(el) {
   if (el.nodeType !== Node.ELEMENT_NODE) return false;
   if (el.getAttribute('data-tooltip-trigger') !== 'true') return false;
-  
-  const style = el.getAttribute('style') || '';
-  
-  // 1. Es del grid principal? (Flexibilizamos a Helm, Body, Glove, Boot)
-  if (/grid-area:\s*(Weapon|Helm|Body|Glove|Boot|Amulet|Ring|Belt|Offhand|Flask)/i.test(style)) {
-    return true;
-  }
-
-  // 2. Es de la lista lateral o algún otro contenedor?
-  // Verificamos si contiene la imagen típica de un ítem (excluyendo skills/pasivas).
-  const img = el.querySelector('img');
-  if (img) {
-    const src = img.getAttribute('src') || '';
-    // Los ítems en POE usan '/gen/' (con sockets) o '/2DItems/' en su URL de imagen.
-    if (src.includes('/gen/') || src.includes('2DItems')) {
-      return true;
-    }
-  }
-  
-  return false;
+  return /grid-area:\s*(Weapon|Helmet|BodyArmour|Gloves|Boots|Amulet|Ring|Ring2|Belt|Offhand|Flask\d*)/i
+    .test(el.getAttribute('style') || '');
 }
 
 function injectButtonIntoSlot(slotEl) {
