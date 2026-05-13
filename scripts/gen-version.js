@@ -40,24 +40,40 @@ function generateVersion() {
   const timeSuffix = `${minuteLastDigit}${seconds}`;
 
   const finalVersion = `v${baseVersion}.${dateSuffix}.${timeSuffix}`;
-  const manifestVersion = `${baseVersion}.${dateSuffix}.${timeSuffix}`.replace('v', ''); // Chrome format: 0.1.230513.821
   
-  console.log(`Generated version: ${finalVersion}`);
+  // 4. Calcular manifestVersion (Técnica, para Chrome Store: máx 65535 por parte)
+  // Usamos: Base.Año.SegundosDelDía/2 (para que quepa en 65535)
+  const baseParts = baseVersion.split('.').map(n => parseInt(n) || 0);
+  const safeManifestVersion = [...baseParts];
+  
+  // Aseguramos que tenga máximo 4 partes y que sean números válidos
+  if (safeManifestVersion.length < 3) {
+    safeManifestVersion.push(now.getFullYear());
+  }
+  if (safeManifestVersion.length < 4) {
+    const totalSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    safeManifestVersion.push(Math.floor(totalSeconds / 2));
+  }
+  const manifestVersion = safeManifestVersion.slice(0, 4).join('.');
+  
+  console.log(`Display version: ${finalVersion}`);
+  console.log(`Technical manifest version: ${manifestVersion}`);
 
-  // 4. Escribir popup/version.js
+  // 5. Escribir popup/version.js
   const outputPath = path.join(__dirname, '..', 'popup', 'version.js');
   const content = `// Archivo generado automáticamente. No editar manualmente.\nconst APP_VERSION = "${finalVersion}";\n`;
   
   fs.writeFileSync(outputPath, content);
   console.log(`Version written to ${outputPath}`);
 
-  // 5. Sincronizar con manifest.json (CRÍTICO para Chrome Store)
+  // 6. Sincronizar con manifest.json (CRÍTICO para Chrome Store)
   const manifestPath = path.join(__dirname, '..', 'manifest.json');
   if (fs.existsSync(manifestPath)) {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     manifest.version = manifestVersion;
+    manifest.version_name = finalVersion; // Esta es la que verán los usuarios en la Store
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-    console.log(`manifest.json version updated to: ${manifestVersion}`);
+    console.log(`manifest.json updated: version=${manifestVersion}, version_name=${finalVersion}`);
   }
 }
 
