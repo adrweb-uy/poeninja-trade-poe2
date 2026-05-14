@@ -42,13 +42,18 @@ function generateVersion() {
   const finalVersion = `v${baseVersion}.${dateSuffix}.${timeSuffix}`;
   
   // 4. Calcular manifestVersion (Técnica, para Chrome Store: máx 65535 por parte)
-  // Usamos: Base.Año.SegundosDelDía/2 (para que quepa en 65535)
+  // Usamos: Base.(YY*1000+DayOfYear).SegundosDelDía/2 (para que quepa en 65535 y siempre aumente entre días)
   const baseParts = baseVersion.split('.').map(n => parseInt(n) || 0);
   const safeManifestVersion = [...baseParts];
   
   // Aseguramos que tenga máximo 4 partes y que sean números válidos
   if (safeManifestVersion.length < 3) {
-    safeManifestVersion.push(now.getFullYear());
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+    const yy = now.getFullYear() % 100;
+    safeManifestVersion.push(yy * 1000 + dayOfYear);
   }
   if (safeManifestVersion.length < 4) {
     const totalSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();

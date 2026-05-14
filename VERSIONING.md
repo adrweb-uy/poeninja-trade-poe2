@@ -15,9 +15,10 @@ Es el formato amigable que verás en la UI de la extensión y en la tienda.
 *   **`timeSuffix`**: Basado en el último dígito del minuto y los segundos del **último commit de Git**.
 
 ### 2. Versión Técnica (`version`)
-Es el número que Chrome usa para validar actualizaciones. Debe ser puramente numérico y cada parte no puede superar el valor de **65535**.
-**Formato:** `{baseVersion}.{Año}.{SegundosDelDía / 2}` (ejemplo: `0.1.2026.18651`)
+Es el número que Chrome usa para validar actualizaciones. Debe ser puramente numérico, cada parte no puede superar el valor de **65535** y cada versión nueva debe ser matemáticamente mayor a la anterior.
+**Formato:** `{baseVersion}.{YY * 1000 + DíaDelAño}.{SegundosDelDía / 2}` (ejemplo: `0.1.26134.18651`)
 
+*   **¿Por qué `{YY * 1000 + DíaDelAño}`?**: Garantiza que el tercer número aumente todos los días (ej. día 134 del año 26 = 26134) y cumple con el límite de 65535 de Chrome. Anteriormente usábamos solo el año (2026), lo que provocaba que la versión retrocediera de un día para el otro si se buildeaba a una hora más temprana.
 *   **¿Por qué `/ 2`?**: Un día tiene 86,400 segundos. Al dividir por 2, nos aseguramos de que el número máximo sea 43,200, cumpliendo con el límite de Chrome y garantizando que cada build del mismo día sea superior a la anterior.
 
 ## Archivos Actualizados
