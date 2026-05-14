@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "poe.ninja → POE2 Trade",
   "short_name": "Ninja Trade",
-  "version": "0.1.2026.25592",
+  "version": "0.1.2026.14671",
   "description": "Agrega un botón de búsqueda en los ítems de poe.ninja para buscarlos directamente en el trade de Path of Exile 2.",
   "icons": {
     "16": "icons/icon16.png",
@@ -36,12 +36,11 @@
     }
   ],
   "permissions": [
-    "storage",
-    "tabs"
+    "storage"
   ],
   "host_permissions": [
     "https://poe.ninja/*",
     "https://www.pathofexile.com/*"
   ],
-  "version_name": "v0.1.260513.237"
+  "version_name": "v0.1.260514.304"
 }
